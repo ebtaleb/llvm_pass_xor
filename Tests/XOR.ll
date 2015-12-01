@@ -1,22 +1,24 @@
-; RUN: opt -load %bindir/lib/LLVMMBA${MOD_EXT} -mba -mba-ratio=1 %s -S | FileCheck -check-prefix=CHECK-ON %s
-; RUN: opt -load %bindir/lib/LLVMMBA${MOD_EXT} -mba -mba-ratio=0 %s -S | FileCheck -check-prefix=CHECK-OFF %s
+; ModuleID = 'XOR_test.c'
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-linux-gnu"
 
-; CHECK-LABEL: @foo(
-define i32 @foo(i32 %i, i32 %j) {
-entry:
-  br label %while.cond
-
-while.cond:
-  %i.addr.0 = phi i32 [ %i, %entry ], [ %add, %while.cond ]
-  %0 = xor i32 %i.addr.0, %j
-  %1 = and i32 %0, 255
-  %cmp = icmp eq i32 %1, 0
-; CHECK-ON: mul
-; CHECK-OFF-NOT: mul
-  %add = add i32 %i.addr.0, %j
-  br i1 %cmp, label %while.end, label %while.cond
-
-while.end:
-  %i.addr.0.lcssa = phi i32 [ %i.addr.0, %while.cond ]
-  ret i32 %i.addr.0.lcssa
+; Function Attrs: nounwind uwtable
+define i32 @main(i32 %argc, i8** %argv) #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  %3 = alloca i8**, align 8
+  %var = alloca i32, align 4
+  %bar = alloca i32, align 4
+  store i32 0, i32* %1
+  store i32 %argc, i32* %2, align 4
+  store i8** %argv, i8*** %3, align 8
+  store i32 0, i32* %var, align 4
+  store i32 0, i32* %bar, align 4
+  ret i32 0
 }
+
+attributes #0 = { nounwind uwtable "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
+
+!llvm.ident = !{!0}
+
+!0 = !{!"Ubuntu clang version 3.6.2-1 (tags/RELEASE_362/final) (based on LLVM 3.6.2)"}
