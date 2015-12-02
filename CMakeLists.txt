@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 # LLVM detection part
 # The user is supposed to set this to a valid llvm 3.7 install root
-set(LLVM_ROOT "/home/jmbto/llvm/r/" CACHE PATH "Root of LLVM install.")
+set(LLVM_ROOT "/media/jmbto/1decfa63-a052-4827-837e-f93d3d14e9d4/llvm/r" CACHE PATH "Root of LLVM install.")
 
 # A bit of a sanity check:
 if(NOT EXISTS ${LLVM_ROOT}/include/llvm )
@@ -10,10 +10,10 @@ if(NOT EXISTS ${LLVM_ROOT}/include/llvm )
             "LLVM_ROOT (${LLVM_ROOT}) is invalid")
 endif()
 
-#if(NOT EXISTS ${LLVM_ROOT}/bin/clang )
-    #message(FATAL_ERROR
-        #"clang not compiled with LLVM")
-#endif()
+if(NOT EXISTS ${LLVM_ROOT}/bin/clang )
+    message(FATAL_ERROR
+        "clang not compiled with LLVM")
+endif()
 
 # Load various LLVM config stuff,
 # see http://llvm.org/docs/CMake.html#developing-llvm-passes-out-of-source
@@ -51,8 +51,8 @@ if(NOT EXISTS ${LLVM_ROOT}/bin/FileCheck)
 endif()
 
 # provide the make check target based on lit
-add_custom_target(check
-    COMMAND ${PYTHON_EXECUTABLE} -m lit.main
-            "${CMAKE_CURRENT_BINARY_DIR}/Tests" -v
-    DEPENDS LLVMXOR LLVMReachableIntegerValues LLVMDuplicateBB
-)
+#add_custom_target(check
+    #COMMAND ${PYTHON_EXECUTABLE} -m lit.main
+            #"${CMAKE_CURRENT_BINARY_DIR}/Tests" -v
+    #DEPENDS LLVMXOR
+#)

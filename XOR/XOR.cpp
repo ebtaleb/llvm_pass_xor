@@ -4,14 +4,9 @@
 #include "llvm/ADT/Statistic.h"
 STATISTIC(XORCount, "The # of substituted instructions");
 
-#include "llvm/Pass.h"
 #include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/IR/InstrTypes.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
-
 
 using namespace llvm;
 
@@ -32,35 +27,56 @@ namespace {
 
                 for (auto IIT = BB.begin(), IE = BB.end(); IIT != IE; ++IIT) {
                     Instruction &Inst = *IIT;
-                    auto *BinOp = dyn_cast<BinaryOperator>(&Inst);
-                    if (!BinOp)
+
+                    // We only target instructions in the form : store i32 0, i32* %var
+                    unsigned Opcode = Inst.getOpcode();
+                    if (Opcode != Instruction::Store) {
                         continue;
+                    } else {
+                        DEBUG(dbgs() << Inst.getOperand(0)->getValueName() << "\n");
+                        DEBUG(dbgs() << Inst.getOperand(1)->getName() << "\n");
+                        DEBUG(dbgs() << Inst.getOperand(1)->getValueName() << "\n");
+                        DEBUG(dbgs() << "................" << "\n");
+                    }
 
-                    unsigned Opcode = BinOp->getOpcode();
-                    if (Opcode != Instruction::Add || !BinOp->getType()->isIntegerTy())
-                        continue;
+                    IRBuilder<> Builder(&Inst);
 
-                    IRBuilder<> Builder(BinOp);
+                    StoreInst *SI = dyn_cast<StoreInst>(IIT);
 
-                    Value *NewValue = Builder.CreateAdd(
-                            Builder.CreateXor(BinOp->getOperand(0),
-                                BinOp->getOperand(1)),
-                            Builder.CreateMul(
-                                ConstantInt::get(BinOp->getType(), 2),
-                                Builder.CreateAnd(
-                                    BinOp->getOperand(0),
-                                    BinOp->getOperand(1)))
-                            );
+                    // We do not apply the transformation to unnamed variables
+                    if (Inst.getOperand(1)->hasName()) {
+                        if (ConstantInt* CI = dyn_cast<ConstantInt>(Inst.getOperand(0))) {
+                            if (CI->getBitWidth() <= 32) {
+                                // Check if the value stored is zero
+                                if (CI->isZero()) {
 
-                    DEBUG(dbgs() << *BinOp << " -> " << *NewValue << "\n");
+                                    // We insert instructions in the following form :
+                                    //
+                                    // %0 = load i32, i32* %var, align 4
+                                    // %1 = xor i32 %0, %0
+                                    // store i32 %1, i32* %var, align 4
 
-                    ReplaceInstWithValue(BB.getInstList(), IIT, NewValue);
-                    modified = true;
+                                    Value *var_ptr = Inst.getOperand(1);
+                                    Value *var_load = Builder.CreateAlignedLoad(var_ptr, SI->getAlignment());
+                                    Value *NewValue = Builder.CreateAlignedStore(
+                                            Builder.CreateXor(var_load,
+                                                var_load), var_ptr, SI->getAlignment());
+                                    ReplaceInstWithValue(BB.getInstList(), IIT, NewValue);
 
-                    ++XORCount;
+                                    // Consecutive zero assignments causes instructions to be skipped.
+                                    // The instruciton iterator is decremented to avoid this.
+                                    --IIT;
+
+                                    modified = true;
+                                    XORCount = XORCount + 1;
+                                }
+                            }
+                        }
+                    }
                 }
-            return modified;
-        }
+
+                return modified;
+            }
     };
 }
 
@@ -72,8 +88,7 @@ X(  "xor",  // the option name -> -xor
     false // true if we're writing an analysis
  );
 
-/* clang pass registration (optional)
-*/
+// clang pass registration (optional)
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
