@@ -1,8 +1,8 @@
-// RUN: export PATH="/path/to/llvm/OBJ_ROOT/bin/:$PATH"
-// RUN: clang XOR_test.c -S -emit-llvm -o XOR.ll
-// RUN: opt -load lib/LLVMXOR.so -xor Tests/XOR_test.ll -S -o new_XOR.ll
-// RUN: clang new_XOR.ll -o XOR
-//
+// RUN: clang %s -S -emit-llvm -o %t.ll
+// RUN: opt -load %bindir/lib/LLVMXOR${MOD_EXT} -xor %t.ll -S -o %t0.ll
+// RUN: FileCheck %s < %t0.ll
+// RUN: clang %t0.ll -o %t0
+// RUN: %t0
 #include <stdio.h>
 
 int main()
