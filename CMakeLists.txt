@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 # LLVM detection part
 # The user is supposed to set this to a valid llvm 3.7 install root
-set(LLVM_ROOT "/media/jmbto/1decfa63-a052-4827-837e-f93d3d14e9d4/llvm/r" CACHE PATH "Root of LLVM install.")
+set(LLVM_ROOT "/media/jmbto/1decfa63-a052-4827-837e-f93d3d14e9d4/llvm/obj" CACHE PATH "Root of LLVM install.")
+#set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
 
 # A bit of a sanity check:
 if(NOT EXISTS ${LLVM_ROOT}/include/llvm )
@@ -40,19 +41,19 @@ add_subdirectory(XOR)
 
 # testing part relies on lit, dependency is required to avoid cmake bloat
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-#include(Python)
-#find_python_module(lit REQUIRED)
+include(Python)
+find_python_module(lit REQUIRED)
 
 # set various configuration settings in the test suite
-#configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Tests/lit.cfg.in" "${CMAKE_CURRENT_BINARY_DIR}/Tests/lit.cfg")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Tests/lit.cfg.in" "${CMAKE_CURRENT_BINARY_DIR}/Tests/lit.cfg")
 
 if(NOT EXISTS ${LLVM_ROOT}/bin/FileCheck)
     message(FATAL_ERROR "LLVM wasn't configured with -DLLVM_INSTALL_UTILS, cannot use FileCheck")
 endif()
 
 # provide the make check target based on lit
-#add_custom_target(check
-    #COMMAND ${PYTHON_EXECUTABLE} -m lit.main
-            #"${CMAKE_CURRENT_BINARY_DIR}/Tests" -v
-    #DEPENDS LLVMXOR
-#)
+add_custom_target(check
+    COMMAND ${PYTHON_EXECUTABLE} -m lit.main
+            "${CMAKE_CURRENT_BINARY_DIR}/Tests" -v
+            DEPENDS LLVMXOR
+)

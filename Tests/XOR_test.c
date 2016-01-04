@@ -7,12 +7,37 @@
 
 int main()
 {
+
+    // CHECK: load
+    // CHECK: xor
+    // CHECK: store
     int var = 0;
+
+    // CHECK: load
+    // CHECK: xor
+    // CHECK: store
     int foo = 0;
+
+    // CHECK: load
+    // CHECK: xor
+    // CHECK: store
     int ifoo = 0;
+
+    // CHECK: load
+    // CHECK: xor
+    // CHECK: store
     int bar = 0;
+
+    // CHECK: load
+    // CHECK: xor
+    // CHECK: store
     int quack = 0;
+
+    // CHECK: load
+    // CHECK: xor
+    // CHECK: store
     quack = 0;
+
     printf("quack equals %d\n", quack);
     return 0;
 }

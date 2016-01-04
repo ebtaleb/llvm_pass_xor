@@ -1,10 +1,9 @@
-CMakeCache.txt
-**/CMakeFiles/
-cmake_install.cmake
-Makefile
 *.swp
+**/CMakeCache.txt
+**/CMakeFiles
+**/cmake_install.cmake
+Tests/Output/
+Tests/lit.cfg
+**/Makefile
 lib/
-*.o
-a.out
-*.ll
-XOR_test
+Utils/*.a
